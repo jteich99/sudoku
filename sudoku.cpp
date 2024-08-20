@@ -31,6 +31,7 @@ public:
         printBoard();
         fillValues();
         printBoard();
+        removeValues();
     };
 
     void printBoard() {
@@ -189,6 +190,23 @@ public:
                 }
             }
         }
+    }
+
+    void removeValues(){
+        int previousValue;
+        bool uniqueSolution;
+
+        for (int repetition = 0; repetition < 60; repetition++){
+            // get a random row and column index
+            int rowNumber = getRandomValue(0,8);
+            int columnNumber = getRandomValue(0,8);
+
+            // remove value from matrix (and save it in case more than 1 solution is obtained)
+            previousValue = matrix[rowNumber][columnNumber];
+            matrix[rowNumber][columnNumber] = 0;
+        }
+        printBoard();
+
     }
     void randomizeBasicArray(){
         std::random_device os_seed;
