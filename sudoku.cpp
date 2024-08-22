@@ -1,6 +1,9 @@
 #include <iostream>
+#include <map>
+#include <vector>
 #include <random>
 #include <cstring>
+#include <algorithm>
 using namespace std;
 
 using u32    = uint_least32_t; 
@@ -12,6 +15,8 @@ public:
     int** matrix; // declare the matrix
     // pointer in memory to an array of arrays
     int* basicArray;
+    int** solvedBoard;
+    map<vector<int>,vector<int>> emptySpaces;
     
     // constructor method 
     Sudoku(int gameSizeSet)
@@ -207,7 +212,137 @@ public:
         }
         printBoard();
 
+        uniqueSolution = testUniqueness();
     }
+
+    bool testUniqueness(){
+        // returns true if only 1 solution, returns false if at least 2 solutions
+        
+        
+        // test possible solutions
+        bool allPossibilitiesAnalyzed = false;
+        int solutions = solveBoard();
+        // while (solutions < 2 and not allPossibilitiesAnalyzed){
+        //     
+
+        // }
+
+
+        // return condition
+        if (solutions == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    int solveBoard(int maxAllowedSolutions = 0) {
+        solvedBoard = matrix; // create a copy of the gameBoard to solve it
+        
+        // find all empty spaces and get possible values to fill
+        emptySpaces = possibleValues();
+
+        // 1- fill positions that have only 1 possible value:
+        fillPositionsWithUniqueValues();
+
+        // 2- check if a value makes that a position has no possible values
+
+        return 0;
+    }
+
+    void fillPositionsWithUniqueValues() {
+        bool uniquePossibleValues = checkForUniquePossibleValues();
+        int row;
+        int column;
+        vector<vector<int>> keysToDelete;
+        
+        // while there are positions with only 1 possible values
+        while (uniquePossibleValues) {
+            printPossibleValuesMap(emptySpaces);
+
+            // 1- fill positions
+            for (const auto& [key, value] : emptySpaces) {
+                if (value.size() == 1) {
+                    row = key[0];
+                    column = key[1];
+                    cout << row << ", " << column << " -> " << value[0] << endl;
+                    solvedBoard[row][column] = value[0];
+                    cout << "assigned value to solvedBoard" << endl;
+                    keysToDelete.emplace(keysToDelete.end(), key);
+                    cout << "erased key from empty spaces" << endl;
+                }
+            }
+
+            for (const auto& key : keysToDelete) {
+                emptySpaces.erase(key);
+            }
+
+
+            // 2- recheck possibleValues
+            emptySpaces = possibleValues();
+            uniquePossibleValues = checkForUniquePossibleValues();
+        }
+    }
+
+    bool checkForUniquePossibleValues() {
+        int counterUniquePossibleValues = 0;
+        for (const auto& [key, value] : emptySpaces) {
+            // for (int i: value) {
+            //     cout << i << " ";
+            // }
+            // cout << "\n";
+            // cout << "vector size = " << value.size() << endl;
+            if (value.size() == 1) {
+                counterUniquePossibleValues++;
+            }
+        }
+
+        if (counterUniquePossibleValues > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    map<vector<int>,vector<int>> possibleValues() {
+        map<vector<int>,vector<int>> possibleValuesMap;
+        for (int i = 0; i < 9; i++){ // i = row index
+            for (int j = 0; j < 9; j++){ // j = column index
+                if (matrix[i][j] == 0){
+                    possibleValuesMap[{i,j}] = getPossibleValues(i,j);
+                }
+            }
+        }
+
+        return possibleValuesMap;
+    }
+
+
+    vector<int> getPossibleValues( int rowIndex, int columnIndex, bool defaultBoard = true , bool solvedBoard = false, bool testBoard = false){
+
+        if (solvedBoard) {
+            board = solvedBoard;
+        } else if (testBoard) {
+            board = testBoard;
+        } else {
+            board = matrix;
+        }
+        vector<int> possibleValues;
+        bool rowCheck;
+        bool columnCheck;
+
+        for (int i = 1; i < 10; i++) {
+            rowCheck = checkValueNotInRow(i, columnIndex);
+            columnCheck = checkValueNotInColumn(i, rowIndex);
+
+            if (rowCheck and columnCheck) {
+                possibleValues.emplace(possibleValues.end(), i);
+            }
+        }
+        return possibleValues;
+    }
+
     void randomizeBasicArray(){
         std::random_device os_seed;
         const u32 seed = os_seed();
